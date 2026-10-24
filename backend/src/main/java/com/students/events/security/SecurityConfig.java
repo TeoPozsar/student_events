@@ -70,6 +70,14 @@ public class SecurityConfig {
                     org.springframework.http.HttpMethod.POST,
                     "/api/events/*/register"
                 ).hasRole("USER")
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.PUT,
+                    "/api/events/*"
+                ).hasAnyRole("ORGANIZER", "ADMIN")
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.DELETE,
+                    "/api/events/*"
+                ).hasAnyRole("ORGANIZER", "ADMIN")
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex

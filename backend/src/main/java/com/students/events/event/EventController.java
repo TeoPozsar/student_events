@@ -48,4 +48,18 @@ public class EventController {
                 authentication.getName()
         );
     }
+
+    @PutMapping("/{id}")
+    public Event updateEvent(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateEventRequest request
+    ) {
+        return eventService.updateEvent(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteEvent(@PathVariable Long id) {
+        eventService.deleteEvent(id);
+    }
 }

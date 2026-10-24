@@ -63,4 +63,24 @@ public class EventService {
 
         return eventRepository.save(event);
     }
+
+    @Transactional
+    public Event updateEvent(Long id, CreateEventRequest request) {
+        Event event = getEventById(id);
+
+        event.setTitle(request.title().trim());
+        event.setDescription(request.description().trim());
+        event.setLocation(request.location().trim());
+        event.setCategory(request.category().trim());
+        event.setStartDateTime(request.startDateTime());
+        event.setCapacity(request.capacity());
+
+        return eventRepository.save(event);
+    }
+
+    @Transactional
+    public void deleteEvent(Long id) {
+        Event event = getEventById(id);
+        eventRepository.delete(event);
+    }
 }

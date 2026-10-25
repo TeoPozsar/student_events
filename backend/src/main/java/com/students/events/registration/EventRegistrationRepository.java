@@ -13,6 +13,11 @@ public interface EventRegistrationRepository
             Long eventId
     );
 
+    java.util.List<EventRegistration> findByUserIdAndStatusNotOrderByRegisteredAtDesc(
+            Long userId,
+            RegistrationStatus status
+    );
+
     boolean existsByUserIdAndEventIdAndStatus(
             Long userId,
             Long eventId,

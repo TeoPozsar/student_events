@@ -30,6 +30,19 @@ public class RegistrationService {
         this.userRepository = userRepository;
     }
 
+    @Transactional(readOnly = true)
+    public java.util.List<RegistrationResponse> findActiveForUser(String email) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"));
+        return registrationRepository
+                .findByUserIdAndStatusNotOrderByRegisteredAtDesc(
+                        user.getId(), RegistrationStatus.CANCELLED)
+                .stream()
+                .map(RegistrationResponse::from)
+                .toList();
+    }
+
     @Transactional
     public EventRegistration register(Long eventId, String email) {
         User user = userRepository.findByEmailIgnoreCase(email)

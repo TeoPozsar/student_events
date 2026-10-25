@@ -1,0 +1,96 @@
+@use '../../../styles/variables' as *;
+
+:host {
+  display: block;
+  min-height: 100vh;
+  color: $text;
+  font-family: $font;
+}
+
+.layout {
+  min-height: 100vh;
+  background: $background;
+}
+
+.content {
+  max-width: 1600px;
+  min-height: 100vh;
+  margin-left: $sidebar-width;
+  padding: 0 38px;
+
+  @media (max-width: $tablet) {
+    padding: 0 22px;
+  }
+
+  @media (max-width: $mobile) {
+    margin-left: 0;
+    padding: 0 16px;
+  }
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 70px;
+  border-bottom: 1px solid $border-light;
+
+  @media (max-width: $mobile) {
+    gap: 10px;
+    min-height: 55px;
+  }
+}
+
+.breadcrumb {
+  color: $muted;
+  font-size: 11px;
+
+  span {
+    padding: 0 9px;
+    color: #c1c8d4;
+  }
+
+  @media (max-width: $mobile) {
+    font-size: 10px;
+  }
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 10px 14px;
+  border: 1px solid #f3c9c5;
+  border-radius: 7px;
+  background: $danger-light;
+  color: $danger;
+  font-size: 12px;
+
+  button {
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    font-size: 18px;
+    line-height: 1;
+
+    &:hover {
+      background: #ffffff90;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary;
+    }
+  }
+}
+
+footer {
+  padding: 26px 0;
+  margin-top: 32px;
+  border-top: 1px solid $border-light;
+  color: #929caf;
+  font-size: 10px;
+}

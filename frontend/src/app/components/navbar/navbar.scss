@@ -1,0 +1,68 @@
+@use '../../../styles/variables' as *;
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  display: flex;
+  flex-direction: column;
+  width: $sidebar-width;
+  padding: 28px 17px;
+  background: white;
+  border-right: 1px solid $border-light;
+
+  @media (max-width: $mobile) {
+    position: static;
+    width: 100%;
+    padding: 16px;
+  }
+}
+
+.brand {
+  margin: 0 0 42px 4px;
+
+  @media (max-width: $mobile) {
+    margin-bottom: 20px;
+  }
+}
+
+.nav-heading {
+  margin: 0 0 12px 9px;
+  color: #929caf;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  @media (max-width: $mobile) {
+    display: none;
+  }
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 5px;
+  border-radius: 7px;
+  color: $muted;
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+
+  span {
+    width: 18px;
+    font-size: 17px;
+  }
+
+  &:hover,
+  &.active {
+    background: $primary-light;
+    color: $primary;
+  }
+
+  @media (max-width: $mobile) {
+    min-height: 38px;
+  }
+}

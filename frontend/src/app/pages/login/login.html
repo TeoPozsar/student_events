@@ -1,0 +1,52 @@
+<main class="auth-page">
+  <section class="auth-card">
+    <div class="brand"><span class="brand-icon">C</span><span>CampusEvents</span></div>
+    <h1>{{ authMode === 'login' ? 'Welcome back' : 'Create your account' }}</h1>
+    <p>Meet people, learn something new, and make campus life yours.</p>
+    @if (notice.message(); as message) { <div class="error" role="status">{{ message }}</div> }
+    @if (authError(); as message) { <div class="error" role="alert">{{ message }}</div> }
+    <form (ngSubmit)="submitAuth(auth)" #auth="ngForm" novalidate>
+      @if (authMode === 'register') {
+        <div class="field">
+          <input name="firstName" [(ngModel)]="authForm.firstName" #firstName="ngModel" placeholder="First name"
+                 autocomplete="given-name" required maxlength="50" aria-label="First name"
+                 [attr.aria-invalid]="(firstName.invalid && (firstName.touched || auth.submitted)) || serverErrors()['firstName'] ? true : null">
+          @if (firstName.invalid && (firstName.touched || auth.submitted)) { <small class="field-error">First name is required.</small> }
+          @else if (serverErrors()['firstName']) { <small class="field-error">First name {{ serverErrors()['firstName'] }}.</small> }
+        </div>
+        <div class="field">
+          <input name="lastName" [(ngModel)]="authForm.lastName" #lastName="ngModel" placeholder="Last name"
+                 autocomplete="family-name" required maxlength="50" aria-label="Last name"
+                 [attr.aria-invalid]="(lastName.invalid && (lastName.touched || auth.submitted)) || serverErrors()['lastName'] ? true : null">
+          @if (lastName.invalid && (lastName.touched || auth.submitted)) { <small class="field-error">Last name is required.</small> }
+          @else if (serverErrors()['lastName']) { <small class="field-error">Last name {{ serverErrors()['lastName'] }}.</small> }
+        </div>
+      }
+      <div class="field">
+        <input name="email" type="email" [(ngModel)]="authForm.email" #email="ngModel" placeholder="Email"
+               autocomplete="email" required email maxlength="100" aria-label="Email"
+               [attr.aria-invalid]="(email.invalid && (email.touched || auth.submitted)) || serverErrors()['email'] ? true : null">
+        @if (email.errors?.['required'] && (email.touched || auth.submitted)) { <small class="field-error">Email is required.</small> }
+        @else if (email.errors?.['email'] && (email.touched || auth.submitted)) { <small class="field-error">Enter a valid email address.</small> }
+        @else if (serverErrors()['email']) { <small class="field-error">Email {{ serverErrors()['email'] }}.</small> }
+      </div>
+      <div class="field">
+        <input name="password" type="password" [(ngModel)]="authForm.password" #password="ngModel"
+               placeholder="Password{{ authMode === 'register' ? ' (min. 8 characters)' : '' }}"
+               [autocomplete]="authMode === 'login' ? 'current-password' : 'new-password'" required
+               [attr.minlength]="authMode === 'register' ? 8 : null" maxlength="72" aria-label="Password"
+               [attr.aria-invalid]="(password.invalid && (password.touched || auth.submitted)) || serverErrors()['password'] ? true : null">
+        @if (password.errors?.['required'] && (password.touched || auth.submitted)) { <small class="field-error">Password is required.</small> }
+        @else if (password.errors?.['minlength'] && (password.touched || auth.submitted)) { <small class="field-error">Password must be at least 8 characters.</small> }
+        @else if (serverErrors()['password']) { <small class="field-error">Password {{ serverErrors()['password'] }}.</small> }
+      </div>
+      <button class="primary-button" [disabled]="loading()" [class.loading]="loading()" [attr.aria-busy]="loading()" type="submit">
+        @if (loading()) { <span class="spinner" aria-hidden="true"></span> }
+        {{ loading() ? (authMode === 'login' ? 'Logging in...' : 'Creating account...') : (authMode === 'login' ? 'Log in' : 'Register') }}
+      </button>
+    </form>
+    <button class="link-button" type="button" [disabled]="loading()" (click)="switchMode()">
+      {{ authMode === 'login' ? 'Need an account? Register' : 'Already registered? Log in' }}
+    </button>
+  </section>
+</main>

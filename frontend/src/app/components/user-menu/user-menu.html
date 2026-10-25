@@ -1,0 +1,28 @@
+<div class="user-menu">
+  <div class="avatar" aria-hidden="true">
+    @if (profileService.pictureUrl(); as picture) {
+      <img [src]="picture" alt="">
+    } @else {
+      {{ profileService.initial() }}
+    }
+  </div>
+  <button
+    #trigger
+    class="gear-button"
+    type="button"
+    aria-label="Open account menu"
+    aria-haspopup="menu"
+    aria-controls="user-menu-dropdown"
+    [attr.aria-expanded]="open()"
+    (click)="toggle()"
+    (keydown)="onTriggerKeydown($event)">
+    <span aria-hidden="true">&#9881;</span>
+  </button>
+
+  @if (open()) {
+    <div id="user-menu-dropdown" class="dropdown" role="menu" aria-label="Account menu" (keydown)="onMenuKeydown($event)">
+      <button #item class="menu-item" type="button" role="menuitem" (click)="openProfile()">View Profile</button>
+      <button #item class="menu-item danger" type="button" role="menuitem" (click)="logout()">Logout</button>
+    </div>
+  }
+</div>

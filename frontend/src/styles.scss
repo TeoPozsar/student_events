@@ -1,0 +1,221 @@
+@use 'styles/variables' as *;
+
+// Global reset and styles shared by several pages.
+* {
+  box-sizing: border-box;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: $heading;
+  font-size: 17px;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.brand-icon {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  border-radius: 9px;
+  background: $primary;
+  color: white;
+  font-size: 20px;
+}
+
+.primary-button, .link-button, .delete-button {
+  border: 0;
+  border-radius: 7px;
+  padding: 10px 14px;
+}
+
+.primary-button {
+  background: $primary;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background: $primary-dark;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+
+  &.loading:disabled {
+    cursor: progress;
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  border: 2px solid #ffffff80;
+  border-top-color: white;
+  border-radius: 50%;
+  vertical-align: -2px;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.field-error {
+  display: block;
+  margin-top: 4px;
+  color: $danger;
+  font-size: 11px;
+}
+
+.success {
+  margin: 12px 0;
+  padding: 10px;
+  border-radius: 7px;
+  background: #ecfdf3;
+  color: #067647;
+  font-size: 12px;
+}
+
+.link-button {
+  margin-top: 12px;
+  background: transparent;
+  color: $primary;
+
+  &:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+}
+
+.delete-button {
+  background: $danger-light;
+  color: $danger;
+}
+
+.error {
+  margin: 12px 0;
+  padding: 10px;
+  border-radius: 7px;
+  background: $danger-light;
+  color: $danger;
+  font-size: 12px;
+}
+
+.welcome {
+  margin-top: 27px;
+  padding: 29px 32px;
+  border: 1px solid #dfe7ff;
+  border-radius: 12px;
+  background: linear-gradient(110deg, #eaf0ff, #f5f7ff);
+
+  h1 {
+    margin: 0;
+    color: $heading;
+    font-size: 30px;
+    letter-spacing: -0.8px;
+  }
+
+  > p:last-child {
+    margin: 10px 0 0;
+    color: $muted;
+    font-size: 12px;
+  }
+
+  .eyebrow {
+    margin: 0 0 10px;
+    color: $primary;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: 1.4px;
+  }
+
+  @media (max-width: $mobile) {
+    padding: 23px 20px;
+
+    h1 {
+      font-size: 25px;
+    }
+  }
+}
+
+.events-section {
+  margin-top: 32px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  h2 {
+    margin: 0;
+    color: $heading-soft;
+    font-size: 20px;
+  }
+
+  p {
+    margin: 7px 0 0;
+    color: #8791a3;
+    font-size: 11px;
+  }
+
+  .event-count {
+    color: $muted-light;
+    font-size: 11px;
+  }
+}
+
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+
+  @media (max-width: $tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: $mobile) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  padding: 45px 15px;
+  border: 1px dashed #dce2ed;
+  border-radius: 10px;
+  background: white;
+  text-align: center;
+
+  h3 {
+    color: #263752;
+  }
+
+  p {
+    color: $muted-light;
+    font-size: 12px;
+  }
+}

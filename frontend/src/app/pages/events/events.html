@@ -1,0 +1,23 @@
+<section class="welcome"><p class="eyebrow">YOUR CAMPUS. YOUR COMMUNITY.</p><h1>{{ title }}</h1><p>Meet people, learn something new, and make campus life yours.</p></section>
+<section class="events-section">
+  <div class="section-heading"><div><h2>{{ heading }}</h2><p>Find your next campus experience.</p></div><span class="event-count">{{ filteredEvents.length }} events</span></div>
+  @if (errorMessage()) { <div class="error" role="alert">{{ errorMessage() }} <button type="button" class="retry" (click)="load()">Retry</button></div> }
+  <div class="filters"><input type="search" placeholder="⌕  Search events or organizations..." [(ngModel)]="searchTerm"></div>
+  <div class="categories">
+    @for (category of categories; track category) {
+      <button [class.active]="selectedCategory === category" (click)="selectedCategory = category">{{ category }}</button>
+    }
+  </div>
+  @if (loading()) { <p class="empty-state">Loading events...</p> }
+  <div class="event-grid">
+    @for (event of filteredEvents; track event.id) {
+      <app-event-card [event]="event" />
+    } @empty {
+      @if (!loading() && !errorMessage()) {
+        @if (registeredOnly && events().length === 0) {
+          <div class="empty-state"><h3>You haven't registered for any events yet.</h3><a class="discover-link" routerLink="/events">Discover Events</a></div>
+        } @else { <div class="empty-state"><h3>No events found</h3><p>Try a different search or category.</p></div> }
+      }
+    }
+  </div>
+</section>

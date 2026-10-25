@@ -1,0 +1,11 @@
+<aside class="sidebar">
+  <a class="brand" routerLink="/events"><span class="brand-icon">C</span><span>CampusEvents</span></a>
+  <p class="nav-heading">{{ authService.workspaceLabel() }}</p>
+  <nav [attr.aria-label]="authService.workspaceLabel()">
+    <a class="nav-link" routerLink="/events" routerLinkActive="active"><span aria-hidden="true">&#8962;</span>Discover Events</a>
+    <a class="nav-link" routerLink="/my-events" routerLinkActive="active"><span aria-hidden="true">&#9635;</span>My Events</a>
+    @if (authService.isManager()) {
+      <a class="nav-link" routerLink="/manage" routerLinkActive="active"><span aria-hidden="true">&#65291;</span>Manage Events</a>
+    }
+  </nav>
+</aside>

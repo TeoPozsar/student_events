@@ -1,0 +1,27 @@
+<article class="event-card" tabindex="0" role="link" [attr.aria-label]="'View details for ' + event().title" (click)="open($event)" (keydown.enter)="open($event)" (keydown.space)="open($event)">
+  <div class="event-cover purple" [class.no-poster]="!posterSrc()">
+    @if (posterSrc(); as src) {
+      <img class="poster" [src]="src" [alt]="'Poster for ' + event().title" loading="lazy" (error)="onPosterError()">
+    } @else {
+      <span class="cover-icon">✦</span>
+    }
+    <span class="date-badge">{{ date() }}</span><span class="cover-category">{{ event().category }}</span>
+  </div>
+  <div class="event-info">
+    <p class="organization">{{ event().organizer }}</p>
+    <h3>{{ event().title }}</h3>
+    <p class="description">{{ event().description }}</p>
+    <div class="detail">◷ &nbsp; {{ time() }}</div>
+    <div class="detail">⌖ &nbsp; {{ event().location }}</div>
+    <div class="capacity">
+      <span>{{ event().attendeeCount }} / {{ event().capacity }} participants</span>
+      <div class="progress"><span [style.width.%]="(event().attendeeCount / event().capacity) * 100"></span></div>
+    </div>
+    @if (showActions()) {
+      <div class="card-actions">
+        <button class="register-button" (click)="edit.emit(event())">Edit</button>
+        <button class="delete-button" (click)="remove.emit(event().id)">Delete</button>
+      </div>
+    }
+  </div>
+</article>

@@ -1,0 +1,67 @@
+﻿<div class="details-page">
+  <button type="button" class="back" (click)="back()">&larr; Back</button>
+
+  @switch (state()) {
+    @case ('loading') { <p class="empty-state" role="status">Loading event...</p> }
+    @case ('not-found') {
+      <div class="empty-state"><h3>Event not found</h3><p>This event doesn't exist or was removed.</p><a class="primary-btn" routerLink="/events">Discover Events</a></div>
+    }
+    @case ('error') {
+      <div class="error" role="alert">Could not load this event. <button type="button" class="primary-btn" (click)="load()">Retry</button></div>
+    }
+    @case ('ready') {
+      @if (event(); as e) {
+        <article class="details">
+          <div class="poster-area" [class.no-poster]="!posterSrc()">
+            @if (posterSrc(); as src) {
+              <img [src]="src" [alt]="'Poster for ' + e.title" (error)="posterFailed.set(true)">
+            } @else {
+              <span class="placeholder" aria-hidden="true">&#10022;</span>
+              <span class="placeholder-text">No poster yet</span>
+            }
+          </div>
+
+          <div class="body">
+            <div class="main">
+              <span class="category">{{ e.category }}</span>
+              <h1>{{ e.title }}</h1>
+              <p class="description">{{ e.description }}</p>
+            </div>
+
+            <aside class="side">
+              <dl>
+                <dt>Date</dt><dd>{{ e.startDateTime | date: 'EEEE, d MMMM y' }}</dd>
+                <dt>Start time</dt><dd>{{ e.startDateTime | date: 'shortTime' }}</dd>
+                <dt>Location</dt><dd>{{ e.location }}</dd>
+                <dt>Organizer</dt><dd>{{ e.organizer }}</dd>
+                <dt>Attendance</dt><dd>{{ e.attendeeCount }} / {{ e.capacity }} participants</dd>
+              </dl>
+              <div class="progress"><span [style.width.%]="e.capacity ? (e.attendeeCount / e.capacity) * 100 : 0"></span></div>
+
+              @if (isStudent()) {
+                @if (registered()) {
+                  <p class="registered" role="status">&#10003; You're registered</p>
+                  <button type="button" class="secondary-btn" [disabled]="submitting()" (click)="cancel()">
+                    {{ submitting() ? 'Cancelling...' : 'Cancel registration' }}
+                  </button>
+                } @else if (isFull()) {
+                  <p class="full">This event is full.</p>
+                } @else {
+                  <button type="button" class="primary-btn wide" [disabled]="submitting()" (click)="register()">
+                    {{ submitting() ? 'Registering...' : 'Register' }}
+                  </button>
+                }
+              } @else if (isManager()) {
+                <a class="secondary-btn" routerLink="/manage">Manage events</a>
+              }
+
+              @if (feedback(); as f) {
+                <p class="feedback" [class.ok]="f.type === 'success'" [attr.role]="f.type === 'error' ? 'alert' : 'status'">{{ f.text }}</p>
+              }
+            </aside>
+          </div>
+        </article>
+      }
+    }
+  }
+</div>

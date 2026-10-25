@@ -1,0 +1,147 @@
+<header class="page-header">
+  <div class="page-title">
+    <h1>Manage Events</h1>
+    <p>Create, organize, and manage your events.</p>
+  </div>
+  <button class="create-button" type="button" (click)="openCreate()">+ Create Event</button>
+</header>
+
+@if (toast(); as t) {
+  <div class="toast" [class.toast-error]="t.type === 'error'" [attr.role]="t.type === 'error' ? 'alert' : 'status'">
+    <span>{{ t.text }}</span>
+    <button type="button" class="toast-close" aria-label="Dismiss message" (click)="dismissToast()">×</button>
+  </div>
+}
+
+@if (!errorMessage()) {
+  <section class="summary" aria-label="Event summary">
+    <div class="summary-card"><span class="summary-label">Total Events</span><strong class="summary-value">{{ loading() && events().length === 0 ? '…' : total() }}</strong></div>
+    <div class="summary-card"><span class="summary-label">Upcoming Events</span><strong class="summary-value">{{ loading() && events().length === 0 ? '…' : upcoming() }}</strong></div>
+    <div class="summary-card"><span class="summary-label">Total Attendees</span><strong class="summary-value">{{ loading() && events().length === 0 ? '…' : attendees() }}</strong></div>
+  </section>
+}
+
+<section class="events-section" [attr.aria-busy]="loading()">
+  @if (errorMessage()) {
+    <div class="state-panel" role="alert">
+      <h2>Something went wrong</h2>
+      <p>{{ errorMessage() }}</p>
+      <button class="primary-button" type="button" (click)="loadEvents()">Retry</button>
+    </div>
+  } @else if (loading() && events().length === 0) {
+    <div class="state-panel" role="status"><span class="loader" aria-hidden="true"></span><p>Loading events…</p></div>
+  } @else if (events().length === 0) {
+    <div class="state-panel">
+      <h2>No events yet</h2>
+      <p>Create your first event to get started.</p>
+      <button class="primary-button" type="button" (click)="openCreate()">+ Create Event</button>
+    </div>
+  } @else {
+    <ul class="manage-grid">
+      @for (event of events(); track event.id) {
+        <li class="manage-card">
+          <div class="poster-frame">
+            @if (posterSrc(event); as src) {
+              <img [src]="src" [alt]="'Poster for ' + event.title" loading="lazy" (error)="onPosterError(event)">
+            } @else {
+              <span class="poster-placeholder" role="img" aria-label="No poster">✦</span>
+            }
+          </div>
+          <div class="card-body">
+            <span class="category-badge">{{ event.category }}</span>
+            <h2 class="card-title">{{ event.title }}</h2>
+            <p class="card-meta"><span aria-hidden="true">◷</span> {{ formatDate(event.startDateTime) }}</p>
+            <p class="card-meta"><span aria-hidden="true">⌖</span> {{ event.location }}</p>
+            <p class="card-meta"><span aria-hidden="true">☺</span> {{ event.attendeeCount }} / {{ event.capacity }} attendees</p>
+            <div class="card-actions">
+              <button class="edit-button" type="button" [attr.aria-label]="'Edit ' + event.title" (click)="editEvent(event)">Edit</button>
+              <button class="remove-button" type="button" [attr.aria-label]="'Delete ' + event.title" (click)="askDelete(event)">Delete</button>
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+<dialog #formDialog class="modal" aria-labelledby="form-heading" (cancel)="$event.preventDefault(); closeForm()">
+  <form (ngSubmit)="saveEvent()" #event="ngForm" novalidate>
+    <h2 id="form-heading">{{ editingId === null ? 'Create Event' : 'Edit Event' }}</h2>
+
+    <fieldset [disabled]="saving()">
+      <legend>Basics</legend>
+      <div class="form-row">
+        <div class="field">
+          <label for="event-title">Event title <span class="required" aria-hidden="true">*</span></label>
+          <input id="event-title" name="title" type="text" [(ngModel)]="eventForm.title" #title="ngModel" placeholder="Liga AC Tech Meetup" required aria-required="true">
+          @if (title.invalid && (title.touched || event.submitted)) { <small class="field-error" role="alert">Title is required.</small> }
+        </div>
+        <div class="field">
+          <label for="event-category">Category <span class="required" aria-hidden="true">*</span></label>
+          <input id="event-category" name="category" type="text" [(ngModel)]="eventForm.category" #category="ngModel" placeholder="Technology" required aria-required="true">
+          @if (category.invalid && (category.touched || event.submitted)) { <small class="field-error" role="alert">Category is required.</small> }
+        </div>
+      </div>
+      <div class="field">
+        <label for="event-description">Description <span class="required" aria-hidden="true">*</span></label>
+        <textarea id="event-description" name="description" [(ngModel)]="eventForm.description" #description="ngModel" placeholder="What is the event about, who should come, what to bring?" required aria-required="true"></textarea>
+        @if (description.invalid && (description.touched || event.submitted)) { <small class="field-error" role="alert">Description is required.</small> }
+      </div>
+    </fieldset>
+
+    <fieldset [disabled]="saving()">
+      <legend>When &amp; where</legend>
+      <div class="form-row">
+        <div class="field">
+          <label for="event-start">Start date and time <span class="required" aria-hidden="true">*</span></label>
+          <input id="event-start" name="startDateTime" type="datetime-local" [(ngModel)]="eventForm.startDateTime" #start="ngModel" required aria-required="true">
+          @if (start.invalid && (start.touched || event.submitted)) { <small class="field-error" role="alert">Start date and time is required.</small> }
+        </div>
+        <div class="field">
+          <label for="event-capacity">Capacity <span class="required" aria-hidden="true">*</span></label>
+          <input id="event-capacity" name="capacity" type="number" inputmode="numeric" step="1" min="1" [(ngModel)]="eventForm.capacity" #capacity="ngModel" placeholder="50" required aria-required="true">
+          @if (capacity.invalid && (capacity.touched || event.submitted)) { <small class="field-error" role="alert">Capacity must be at least 1.</small> }
+        </div>
+      </div>
+      <div class="field">
+        <label for="event-location">Location <span class="required" aria-hidden="true">*</span></label>
+        <input id="event-location" name="location" type="text" [(ngModel)]="eventForm.location" #location="ngModel" placeholder="UPT, Timișoara" required aria-required="true">
+        @if (location.invalid && (location.touched || event.submitted)) { <small class="field-error" role="alert">Location is required.</small> }
+      </div>
+    </fieldset>
+
+    <fieldset [disabled]="saving()" class="poster-field">
+      <legend>Poster</legend>
+      <label for="event-poster">Event poster <span class="optional">(optional)</span></label>
+      @if (posterPreview(); as preview) {
+        <img class="poster-preview" [src]="preview" alt="Selected event poster preview">
+      }
+      <div class="poster-actions">
+        <input #posterInput id="event-poster" class="poster-input" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="poster-help" (change)="onPosterSelected(posterInput)">
+        @if (posterPreview()) { <button class="text-button" type="button" (click)="removePoster()">Remove poster</button> }
+      </div>
+      <small id="poster-help" class="hint">JPEG, PNG or WEBP, up to 5 MB. Choosing another file replaces the current one.</small>
+      @if (posterError()) { <small class="field-error" role="alert">{{ posterError() }}</small> }
+    </fieldset>
+
+    @if (formError()) { <div class="error" role="alert">{{ formError() }}</div> }
+
+    <div class="modal-actions">
+      <button class="secondary-button" type="button" [disabled]="saving()" (click)="closeForm()">Cancel</button>
+      <button class="primary-button" type="submit" [disabled]="saving() || event.invalid" [class.loading]="saving()">
+        @if (saving()) { <span class="spinner" aria-hidden="true"></span>Saving… } @else { {{ editingId === null ? 'Create event' : 'Save changes' }} }
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<dialog #deleteDialog class="modal modal-small" aria-labelledby="delete-heading" aria-describedby="delete-text" (cancel)="$event.preventDefault(); cancelDelete()">
+  <h2 id="delete-heading">Delete event?</h2>
+  <p id="delete-text">You are about to delete <strong class="delete-name">{{ deleteTarget()?.title }}</strong>. This cannot be undone.</p>
+  <div class="modal-actions">
+    <button class="secondary-button" type="button" autofocus [disabled]="deleting()" (click)="cancelDelete()">Cancel</button>
+    <button class="danger-button" type="button" [disabled]="deleting()" (click)="confirmDelete()">
+      @if (deleting()) { <span class="spinner" aria-hidden="true"></span>Deleting… } @else { Delete }
+    </button>
+  </div>
+</dialog>

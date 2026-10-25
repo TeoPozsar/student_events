@@ -11,7 +11,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -39,7 +41,8 @@ public class AuthService {
         String email = request.email().trim();
 
         if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new IllegalArgumentException(
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
                     "An account with this email already exists"
             );
         }

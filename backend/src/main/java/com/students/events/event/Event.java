@@ -1,5 +1,7 @@
 package com.students.events.event;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.students.events.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -7,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "events")
@@ -40,7 +43,27 @@ public class Event {
     @Column(name = "attendee_count", nullable = false)
     private Integer attendeeCount = 0;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "organizer_id", nullable = false)
     private User organizer;
+
+    @JsonIgnore
+    @Column(name = "poster_updated_at")
+    private LocalDateTime posterUpdatedAt;
+
+    // Expose only the organizer's display name, never the full user record.
+    @JsonProperty("organizer")
+    public String getOrganizerName() {
+        return organizer == null ? null : organizer.getFirstName() + " " + organizer.getLastName();
+    }
+
+    // The version query param busts browser caches when the poster is replaced.
+    @JsonProperty("posterUrl")
+    public String getPosterUrl() {
+        if (posterUpdatedAt == null || id == null) {
+            return null;
+        }
+        return "/api/events/" + id + "/poster?v=" + posterUpdatedAt.toInstant(ZoneOffset.UTC).toEpochMilli();
+    }
 }

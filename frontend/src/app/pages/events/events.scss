@@ -1,0 +1,65 @@
+@use '../../../styles/variables' as *;
+
+.filters {
+  display: flex;
+  gap: 10px;
+  margin-top: 23px;
+
+  input {
+    flex: 1;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid #e0e5ee;
+    border-radius: 7px;
+    outline: none;
+    background: white;
+    color: #384862;
+    font-size: 11px;
+
+    &:focus {
+      border-color: #7192f6;
+    }
+  }
+
+  @media (max-width: $mobile) {
+    flex-direction: column;
+  }
+}
+
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 15px 0 21px;
+
+  button {
+    padding: 8px 12px;
+    border: 1px solid $border;
+    border-radius: 20px;
+    background: white;
+    color: $muted;
+    font-size: 10px;
+
+    &:hover,
+    &.active {
+      border-color: $primary;
+      background: $primary;
+      color: white;
+    }
+  }
+}
+
+.retry,
+.discover-link {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 6px 12px;
+  border: 1px solid $primary;
+  border-radius: 6px;
+  background: $primary;
+  color: white;
+  font-size: 11px;
+  text-decoration: none;
+  cursor: pointer;
+}

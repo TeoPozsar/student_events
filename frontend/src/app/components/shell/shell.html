@@ -1,0 +1,17 @@
+<div class="layout">
+  <app-navbar />
+  <main class="content">
+    <header class="topbar">
+      <div class="breadcrumb">{{ authService.workspaceLabel() }} <span>/</span> {{ pageTitle() }}</div>
+      <app-user-menu />
+    </header>
+    @if (notice.message(); as message) {
+      <div class="notice" role="status">
+        <span>{{ message }}</span>
+        <button type="button" aria-label="Dismiss message" (click)="notice.clear()">&times;</button>
+      </div>
+    }
+    <router-outlet />
+    <footer>CampusEvents &middot; Made for the student community</footer>
+  </main>
+</div>

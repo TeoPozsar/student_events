@@ -1,0 +1,61 @@
+@use '../../../styles/variables' as *;
+
+:host {
+  display: block;
+  min-height: 100vh;
+  color: $text;
+  font-family: $font;
+}
+
+.auth-page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  background: $background;
+}
+
+.auth-card {
+  width: min(420px, calc(100% - 32px));
+  padding: 28px;
+  border: 1px solid $border;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 8px 30px #1b31520d;
+
+  h1 {
+    color: $heading;
+  }
+
+  p {
+    color: $muted;
+    font-size: 12px;
+  }
+
+  form {
+    display: grid;
+    gap: 10px;
+  }
+
+  input {
+    width: 100%;
+    min-height: 40px;
+    padding: 9px 12px;
+    border: 1px solid #e0e5ee;
+    border-radius: 7px;
+    outline: none;
+
+    &:focus {
+      border-color: $primary;
+      box-shadow: 0 0 0 3px $primary-light;
+    }
+
+    &[aria-invalid='true'] {
+      border-color: $danger;
+      background: $danger-light;
+    }
+  }
+
+  .primary-button {
+    min-height: 40px;
+  }
+}

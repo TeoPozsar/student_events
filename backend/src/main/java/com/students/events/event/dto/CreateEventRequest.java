@@ -27,7 +27,7 @@ public record CreateEventRequest(
         String category,
 
         @NotNull
-        @Future
+        @Future(message = "must be in the future")
         LocalDateTime startDateTime,
 
         @NotNull

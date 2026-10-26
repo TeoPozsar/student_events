@@ -37,6 +37,9 @@ public class Event {
     @Column(name = "start_date_time", nullable = false)
     private LocalDateTime startDateTime;
 
+    @Column(name = "end_date_time", nullable = false)
+    private LocalDateTime endDateTime;
+
     @Column(nullable = false)
     private Integer capacity;
 
@@ -56,6 +59,16 @@ public class Event {
     @JsonProperty("organizer")
     public String getOrganizerName() {
         return organizer == null ? null : organizer.getFirstName() + " " + organizer.getLastName();
+    }
+
+    // Evaluated on every serialization, so it changes as time passes. Event times are
+    // zone-less wall-clock values interpreted in the server's time zone (like @Future).
+    @JsonProperty("status")
+    public EventStatus getStatus() {
+        if (startDateTime == null || endDateTime == null) {
+            return null;
+        }
+        return EventStatus.of(startDateTime, endDateTime, LocalDateTime.now());
     }
 
     // The version query param busts browser caches when the poster is replaced.

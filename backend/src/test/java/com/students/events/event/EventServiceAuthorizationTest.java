@@ -34,7 +34,8 @@ class EventServiceAuthorizationTest {
     }
 
     private CreateEventRequest request(int capacity) {
-        return new CreateEventRequest("T", "D", "L", "C", LocalDateTime.now().plusDays(1), capacity);
+        return new CreateEventRequest("T", "D", "L", "Technology",
+                LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(1).plusHours(2), capacity);
     }
 
     @BeforeEach
@@ -77,6 +78,13 @@ class EventServiceAuthorizationTest {
         service.updateEvent(10L, request(10), null, false, "admin@x.ro");
         service.deleteEvent(10L, "owner@x.ro");
         verify(events).delete(event);
+    }
+
+    @Test
+    void eventWithRegistrationsCannotBeDeleted() {
+        when(events.hasRegistrations(10L)).thenReturn(true);
+        assertStatus(HttpStatus.CONFLICT, () -> service.deleteEvent(10L, "owner@x.ro"));
+        verify(events, never()).delete(any());
     }
 
     @Test

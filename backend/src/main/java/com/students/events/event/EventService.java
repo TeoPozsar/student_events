@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -34,9 +35,35 @@ public class EventService {
         this.userRepository = userRepository;
     }
 
+    // Discovery list: events that have not ended yet (UPCOMING and IN_PROGRESS).
     @Transactional(readOnly = true)
-    public List<Event> getAllEvents() {
-        return eventRepository.findAll();
+    public List<Event> getDiscoverableEvents() {
+        return eventRepository.findByEndDateTimeAfterOrderByStartDateTimeAsc(LocalDateTime.now());
+    }
+
+    // The organizer is resolved from the authenticated principal; all statuses are included.
+    @Transactional(readOnly = true)
+    public List<Event> getOrganizerEvents(String organizerEmail) {
+        User organizer = userRepository.findByEmailIgnoreCase(organizerEmail)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "User not found"));
+        if (organizer.getRole() != UserRole.ORGANIZER) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Only organizers have their own events");
+        }
+        return eventRepository.findByOrganizerIdOrderByStartDateTimeDesc(organizer.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public List<Event> getAllEventsForAdmin(String actorEmail) {
+        User actor = userRepository.findByEmailIgnoreCase(actorEmail)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "User not found"));
+        if (actor.getRole() != UserRole.ADMIN) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Administrator access required");
+        }
+        return eventRepository.findAllByOrderByStartDateTimeDesc();
     }
 
     @Transactional(readOnly = true)
@@ -55,6 +82,7 @@ public class EventService {
             MultipartFile poster
     ) {
         PosterFile validPoster = validatePoster(poster);
+        requireStartInFuture(request.startDateTime());
 
         User organizer = userRepository
                 .findByEmailIgnoreCase(organizerEmail)
@@ -69,6 +97,7 @@ public class EventService {
         event.setLocation(request.location().trim());
         event.setCategory(request.category().trim());
         event.setStartDateTime(request.startDateTime());
+        event.setEndDateTime(request.endDateTime());
         event.setCapacity(request.capacity());
         event.setAttendeeCount(0);
         event.setOrganizer(organizer);
@@ -99,11 +128,19 @@ public class EventService {
             );
         }
 
+        // Only a changed start must be in the future, so running or finished events stay editable.
+        // The form sends minute precision, so compare at that precision.
+        if (event.getStartDateTime() == null || !request.startDateTime().truncatedTo(ChronoUnit.MINUTES)
+                .equals(event.getStartDateTime().truncatedTo(ChronoUnit.MINUTES))) {
+            requireStartInFuture(request.startDateTime());
+        }
+
         event.setTitle(request.title().trim());
         event.setDescription(request.description().trim());
         event.setLocation(request.location().trim());
         event.setCategory(request.category().trim());
         event.setStartDateTime(request.startDateTime());
+        event.setEndDateTime(request.endDateTime());
         event.setCapacity(request.capacity());
 
         if (validPoster != null) {
@@ -120,7 +157,20 @@ public class EventService {
     public void deleteEvent(Long id, String actorEmail) {
         Event event = getEventById(id);
         requireCanManage(event, actorEmail);
+        if (eventRepository.hasRegistrations(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "This event has registrations and cannot be deleted"
+            );
+        }
         eventRepository.delete(event);
+    }
+
+    private void requireStartInFuture(LocalDateTime start) {
+        if (!start.isAfter(LocalDateTime.now())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Start time must be in the future");
+        }
     }
 
     // Admins manage any event; organizers only the events they created.

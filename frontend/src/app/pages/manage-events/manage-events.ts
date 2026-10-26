@@ -1,19 +1,26 @@
-import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { FormsModule, NgForm } from '@angular/forms';
 import { finalize } from 'rxjs';
+import { StatusBadge } from '../../components/status-badge/status-badge';
+import { AuthService } from '../../core/services/auth.service';
 import { ApiEvent, EventRequest, EventService } from '../../core/services/event.service';
+import { ToastService } from '../../core/services/toast.service';
+import { EVENT_CATEGORIES } from '../../core/event-categories';
 
 const POSTER_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const POSTER_MAX_BYTES = 5 * 1024 * 1024;
+const REFRESH_MS = 60_000;
 
 @Component({
   selector: 'app-manage-events',
-  imports: [FormsModule],
+  imports: [FormsModule, StatusBadge],
   templateUrl: './manage-events.html',
   styleUrl: './manage-events.scss',
 })
 export class ManageEvents {
   private readonly eventService = inject(EventService);
+  private readonly auth = inject(AuthService);
+  private readonly toasts = inject(ToastService);
 
   // Signals: this app is zoneless, so async results must go through signals to re-render.
   readonly events = signal<ApiEvent[]>([]);
@@ -28,11 +35,12 @@ export class ManageEvents {
   readonly deleteTarget = signal<ApiEvent | null>(null);
   readonly failedPosters = signal<ReadonlySet<number>>(new Set());
   readonly total = computed(() => this.events().length);
-  readonly upcoming = computed(() => this.events().filter((e) => new Date(e.startDateTime).getTime() >= Date.now()).length);
+  readonly upcoming = computed(() => this.events().filter((e) => e.status === 'UPCOMING').length);
   readonly attendees = computed(() => this.events().reduce((sum, e) => sum + (e.attendeeCount ?? 0), 0));
   private readonly formDialog = viewChild<ElementRef<HTMLDialogElement>>('formDialog');
   private readonly deleteDialog = viewChild<ElementRef<HTMLDialogElement>>('deleteDialog');
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
+  readonly categories = EVENT_CATEGORIES;
   eventForm: EventRequest = this.emptyEvent();
   editingId: number | null = null;
   private posterFile: File | null = null;
@@ -41,15 +49,34 @@ export class ManageEvents {
 
   constructor() {
     this.loadEvents();
+    // Statuses are derived by the backend from the clock; refresh quietly so badges stay current.
+    const timer = setInterval(() => {
+      if (!this.saving() && !this.deleting()) this.loadEvents(true);
+    }, REFRESH_MS);
+    inject(DestroyRef).onDestroy(() => clearInterval(timer));
   }
 
-  loadEvents(): void {
-    this.loading.set(true);
-    this.errorMessage.set('');
-    this.eventService.list().pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: (events) => this.events.set(events),
-      error: () => this.errorMessage.set('Could not load events. Start the backend and refresh the page.'),
+  // Admins manage every event; organizers manage their own (resolved by the backend from the JWT).
+  loadEvents(silent = false): void {
+    if (!silent) {
+      this.loading.set(true);
+      this.errorMessage.set('');
+    }
+    const source$ = this.auth.isAdmin() ? this.eventService.listAll() : this.eventService.listMine();
+    source$.pipe(finalize(() => this.loading.set(false))).subscribe({
+      next: (events) => {
+        this.events.set(events);
+        this.errorMessage.set('');
+      },
+      error: () => {
+        if (!silent) this.errorMessage.set('Could not load events. Start the backend and refresh the page.');
+      },
     });
+  }
+
+  endBeforeStart(): boolean {
+    const { startDateTime, endDateTime } = this.eventForm;
+    return !!startDateTime && !!endDateTime && endDateTime <= startDateTime;
   }
 
   onPosterSelected(input: HTMLInputElement): void {
@@ -105,8 +132,17 @@ export class ManageEvents {
     this.cancelEdit();
   }
 
-  saveEvent(): void {
+  saveEvent(form?: NgForm): void {
     if (this.saving()) return;
+    if (form?.invalid) {
+      this.formError.set('Please fix the highlighted fields.');
+      Object.values(form.controls).forEach((control) => control.markAsTouched());
+      return;
+    }
+    if (this.endBeforeStart()) {
+      this.formError.set('End must be after the start.');
+      return;
+    }
     this.formError.set('');
     this.saving.set(true);
     const editing = this.editingId !== null;
@@ -119,7 +155,7 @@ export class ManageEvents {
         this.formDialog()?.nativeElement.close();
         this.cancelEdit();
         this.failedPosters.set(new Set());
-        this.showToast('success', editing ? 'Event updated.' : 'Event created.');
+        this.toasts.success(editing ? 'Event updated successfully!' : 'Event published successfully!');
         this.loadEvents();
       },
       error: (error) => this.formError.set(this.message(error)),
@@ -130,7 +166,8 @@ export class ManageEvents {
     this.editingId = event.id;
     this.eventForm = {
       title: event.title, description: event.description, location: event.location,
-      category: event.category, startDateTime: event.startDateTime.slice(0, 16), capacity: event.capacity,
+      // Legacy values outside the supported list are left blank so the organizer must pick one.
+      category: (EVENT_CATEGORIES as readonly string[]).includes(event.category) ? event.category : '', startDateTime: event.startDateTime.slice(0, 16), endDateTime: event.endDateTime.slice(0, 16), capacity: event.capacity,
     };
     this.resetPoster();
     this.currentPosterSrc = this.eventService.posterSrc(event);
@@ -158,7 +195,7 @@ export class ManageEvents {
       next: () => {
         this.deleteDialog()?.nativeElement.close();
         this.deleteTarget.set(null);
-        this.showToast('success', `"${target.title}" was deleted.`);
+        this.toasts.success('Event deleted successfully!');
         this.loadEvents();
       },
       error: (error) => {
@@ -202,7 +239,7 @@ export class ManageEvents {
   }
 
   private emptyEvent(): EventRequest {
-    return { title: '', description: '', location: '', category: 'Technology', startDateTime: '', capacity: 20 };
+    return { title: '', description: '', location: '', category: 'Technology', startDateTime: '', endDateTime: '', capacity: 20 };
   }
 
   private message(error: { status?: number; error?: { error?: string; message?: string } }): string {

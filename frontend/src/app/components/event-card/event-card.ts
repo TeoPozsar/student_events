@@ -1,9 +1,11 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiEvent, EventService } from '../../core/services/event.service';
+import { StatusBadge } from '../status-badge/status-badge';
 
 @Component({
   selector: 'app-event-card',
+  imports: [StatusBadge],
   templateUrl: './event-card.html',
   styleUrl: './event-card.scss',
 })

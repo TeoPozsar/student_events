@@ -1,0 +1,115 @@
+<header class="page-header">
+  <div class="page-title">
+    <h1>Manage Users</h1>
+    <p>Review accounts and assign roles.</p>
+  </div>
+</header>
+
+@if (toast(); as t) {
+  <div class="toast" [class.toast-error]="t.type === 'error'" [attr.role]="t.type === 'error' ? 'alert' : 'status'">
+    <span>{{ t.text }}</span>
+    <button type="button" class="toast-close" aria-label="Dismiss message" (click)="dismissToast()">&times;</button>
+  </div>
+}
+
+<section [attr.aria-busy]="loading()">
+  @if (errorMessage()) {
+    <div class="state-panel" role="alert">
+      <h2>Something went wrong</h2>
+      <p>{{ errorMessage() }}</p>
+      <button class="primary-button" type="button" (click)="load()">Retry</button>
+    </div>
+  } @else if (loading() && users().length === 0) {
+    <div class="state-panel" role="status"><span class="loader" aria-hidden="true"></span><p>Loading users...</p></div>
+  } @else if (users().length === 0) {
+    <div class="state-panel">
+      <h2>No users found</h2>
+      <p>There are no registered accounts yet.</p>
+    </div>
+  } @else {
+    <div class="toolbar" role="search">
+      <div class="field field-search">
+        <label for="user-search">Search by name</label>
+        <input id="user-search" type="search" placeholder="First or last name" autocomplete="off"
+          [value]="search()" (input)="search.set($any($event.target).value)" />
+      </div>
+      <div class="field">
+        <label for="role-filter">Role</label>
+        <select id="role-filter" [value]="roleFilter()" (change)="setRoleFilter($any($event.target).value)">
+          <option value="ALL" [selected]="roleFilter() === 'ALL'">All roles</option>
+          @for (role of roles; track role) {
+            <option [value]="role" [selected]="roleFilter() === role">{{ role }}</option>
+          }
+        </select>
+      </div>
+      <button class="secondary-button" type="button" [disabled]="!hasFilters()" (click)="clearFilters()">Clear filters</button>
+      <p class="result-count" role="status" aria-live="polite">
+        {{ filteredUsers().length }} {{ filteredUsers().length === 1 ? 'user' : 'users' }} found
+      </p>
+    </div>
+    @if (filteredUsers().length === 0) {
+      <div class="state-panel">
+        <h2>No users found matching your filters.</h2>
+        <button class="secondary-button" type="button" (click)="clearFilters()">Clear filters</button>
+      </div>
+    } @else {
+    <div class="table-wrap">
+      <table class="users-table">
+        <caption class="sr-only">Registered users and their roles</caption>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Current role</th>
+            <th scope="col">Change role</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of filteredUsers(); track user.id) {
+            <tr>
+              <td data-label="Name">
+                <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+                @if (isSelf(user)) { <span class="you-badge">You</span> }
+              </td>
+              <td data-label="Email" class="email">{{ user.email }}</td>
+              <td data-label="Current role"><span class="role-badge" [attr.data-role]="user.role">{{ roleLabel(user.role) }}</span></td>
+              <td data-label="Change role">
+                @if (isSelf(user)) {
+                  <span class="self-note">You cannot change your own role.</span>
+                } @else {
+                  <div class="role-actions">
+                    <select
+                      [attr.aria-label]="'Role for ' + user.firstName + ' ' + user.lastName"
+                      [disabled]="saving()"
+                      (change)="select(user, $any($event.target).value)">
+                      @for (role of roles; track role) {
+                        <option [value]="role" [selected]="role === selectedRole(user)">{{ roleLabel(role) }}</option>
+                      }
+                    </select>
+                    <button class="primary-button" type="button" [disabled]="!hasChange(user) || saving()" (click)="askConfirm(user)">Save</button>
+                  </div>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  }
+</section>
+
+<dialog #confirmDialog class="modal" aria-labelledby="confirm-heading" (cancel)="$event.preventDefault(); cancelConfirm()">
+  <h2 id="confirm-heading">Change role?</h2>
+  @if (pending(); as change) {
+    <p>
+      Change <strong>{{ change.user.firstName }} {{ change.user.lastName }}</strong> from
+      <strong>{{ roleLabel(change.user.role) }}</strong> to <strong>{{ roleLabel(change.role) }}</strong>?
+      Their permissions update immediately.
+    </p>
+  }
+  <div class="modal-actions">
+    <button class="secondary-button" type="button" autofocus [disabled]="saving()" (click)="cancelConfirm()">Cancel</button>
+    <button class="primary-button" type="button" [disabled]="saving()" (click)="confirm()">{{ saving() ? 'Saving...' : 'Confirm' }}</button>
+  </div>
+</dialog>

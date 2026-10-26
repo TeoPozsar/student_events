@@ -5,14 +5,16 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
+import { StatusBadge } from '../../components/status-badge/status-badge';
 import { ApiEvent, EventService } from '../../core/services/event.service';
 import { toFriendlyError } from '../../core/utils/http-error';
+import { ToastService } from '../../core/services/toast.service';
 
 type LoadState = 'loading' | 'ready' | 'not-found' | 'error';
 
 @Component({
   selector: 'app-event-details',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, StatusBadge],
   templateUrl: './event-details.html',
   styleUrl: './event-details.scss',
 })
@@ -22,6 +24,7 @@ export class EventDetails {
   private readonly location = inject(Location);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly toasts = inject(ToastService);
 
   private readonly idParam = toSignal(this.route.paramMap.pipe(map((params) => params.get('id'))), { initialValue: null });
 
@@ -89,7 +92,7 @@ export class EventDetails {
         this.registered.set(true);
         this.submitting.set(false);
         this.event.set({ ...event, attendeeCount: event.attendeeCount + 1 });
-        this.feedback.set({ type: 'success', text: 'You are registered for this event.' });
+        this.toasts.success('Successfully registered for the event!');
       },
       error: (error: unknown) => {
         this.submitting.set(false);
@@ -113,7 +116,7 @@ export class EventDetails {
         this.registered.set(false);
         this.submitting.set(false);
         this.event.set({ ...event, attendeeCount: Math.max(0, event.attendeeCount - 1) });
-        this.feedback.set({ type: 'success', text: 'Your registration was cancelled.' });
+        this.toasts.success('Registration cancelled successfully!');
       },
       error: (error: unknown) => {
         this.submitting.set(false);

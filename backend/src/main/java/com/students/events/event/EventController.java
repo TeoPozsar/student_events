@@ -25,9 +25,22 @@ public class EventController {
         this.eventService = eventService;
     }
 
+    // Discovery: only events that have not finished.
     @GetMapping
-    public List<Event> getAllEvents() {
-        return eventService.getAllEvents();
+    public List<Event> getDiscoverableEvents() {
+        return eventService.getDiscoverableEvents();
+    }
+
+    // ORGANIZER only (SecurityConfig): the organizer is taken from the JWT.
+    @GetMapping("/mine")
+    public List<Event> getMyEvents(Authentication authentication) {
+        return eventService.getOrganizerEvents(authentication.getName());
+    }
+
+    // ADMIN only (SecurityConfig): every event in every status.
+    @GetMapping("/admin")
+    public List<Event> getAllEventsForAdmin(Authentication authentication) {
+        return eventService.getAllEventsForAdmin(authentication.getName());
     }
 
     @GetMapping("/{id}")

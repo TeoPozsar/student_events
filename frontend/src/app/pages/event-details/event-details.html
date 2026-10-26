@@ -32,6 +32,8 @@
               <dl>
                 <dt>Date</dt><dd>{{ e.startDateTime | date: 'EEEE, d MMMM y' }}</dd>
                 <dt>Start time</dt><dd>{{ e.startDateTime | date: 'shortTime' }}</dd>
+                <dt>End time</dt><dd>{{ e.endDateTime | date: 'd MMM y, shortTime' }}</dd>
+                <dt>Status</dt><dd><app-status-badge [status]="e.status" /></dd>
                 <dt>Location</dt><dd>{{ e.location }}</dd>
                 <dt>Organizer</dt><dd>{{ e.organizer }}</dd>
                 <dt>Attendance</dt><dd>{{ e.attendeeCount }} / {{ e.capacity }} participants</dd>

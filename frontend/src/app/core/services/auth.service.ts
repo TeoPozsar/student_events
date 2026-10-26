@@ -27,6 +27,8 @@ interface AuthResponse {
 interface MeResponse extends User {}
 
 export const MANAGER_ROLES: Role[] = ['ORGANIZER', 'ADMIN'];
+export const ADMIN_ROLES: Role[] = ['ADMIN'];
+export const MY_EVENTS_ROLES: Role[] = ['USER', 'ORGANIZER'];
 
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
@@ -45,6 +47,8 @@ export class AuthService {
   readonly initialized = signal(false);
 
   readonly isManager = computed(() => this.hasRole(...MANAGER_ROLES));
+  readonly isAdmin = computed(() => this.hasRole(...ADMIN_ROLES));
+  readonly canViewMyEvents = computed(() => this.hasRole(...MY_EVENTS_ROLES));
   readonly workspaceLabel = computed(() => {
     switch (this.user()?.role) {
       case 'ORGANIZER': return 'Organizer Workspace';

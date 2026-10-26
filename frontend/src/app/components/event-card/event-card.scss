@@ -89,6 +89,10 @@
 .event-info {
   padding: 15px;
 
+  app-status-badge {
+    margin-bottom: 8px;
+  }
+
   h3 {
     margin: 0;
     color: $heading-soft;

@@ -8,6 +8,7 @@
     <span class="date-badge">{{ date() }}</span><span class="cover-category">{{ event().category }}</span>
   </div>
   <div class="event-info">
+    <app-status-badge [status]="event().status" />
     <p class="organization">{{ event().organizer }}</p>
     <h3>{{ event().title }}</h3>
     <p class="description">{{ event().description }}</p>

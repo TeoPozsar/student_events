@@ -2,6 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+export type EventStatus = 'UPCOMING' | 'IN_PROGRESS' | 'FINISHED';
+
 export interface ApiEvent {
   id: number;
   title: string;
@@ -9,6 +11,8 @@ export interface ApiEvent {
   location: string;
   category: string;
   startDateTime: string;
+  endDateTime: string;
+  status: EventStatus;
   capacity: number;
   attendeeCount: number;
   organizer: string;
@@ -28,6 +32,7 @@ export interface EventRequest {
   location: string;
   category: string;
   startDateTime: string;
+  endDateTime: string;
   capacity: number;
 }
 
@@ -47,8 +52,19 @@ export class EventService {
     return /^https?:\/\//.test(event.posterUrl) ? event.posterUrl : this.apiHost + event.posterUrl;
   }
 
+  // Discovery list: the backend only returns events that have not finished.
   list(): Observable<ApiEvent[]> {
     return this.http.get<ApiEvent[]>(this.baseUrl);
+  }
+
+  // ORGANIZER: own events in every status.
+  listMine(): Observable<ApiEvent[]> {
+    return this.http.get<ApiEvent[]>(`${this.baseUrl}/mine`);
+  }
+
+  // ADMIN: all events in every status.
+  listAll(): Observable<ApiEvent[]> {
+    return this.http.get<ApiEvent[]>(`${this.baseUrl}/admin`);
   }
 
   get(id: number): Observable<ApiEvent> {

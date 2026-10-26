@@ -1,5 +1,6 @@
 package com.students.events.event;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -64,6 +65,12 @@ public class ApiExceptionHandler {
                 ? status.getReasonPhrase()
                 : ex.getReason();
         return error(status, message);
+    }
+
+    // Backstop for races (e.g. a registration created while the event is being deleted).
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleIntegrity(DataIntegrityViolationException ex) {
+        return error(HttpStatus.CONFLICT, "The request conflicts with related data (for example existing registrations)");
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

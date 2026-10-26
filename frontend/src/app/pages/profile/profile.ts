@@ -3,6 +3,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ProfileService } from '../../core/services/profile.service';
 import { toFriendlyError } from '../../core/utils/http-error';
+import { ToastService } from '../../core/services/toast.service';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_PICTURE_BYTES = 5 * 1024 * 1024;
@@ -15,6 +16,7 @@ const MAX_PICTURE_BYTES = 5 * 1024 * 1024;
 })
 export class Profile {
   readonly profileService = inject(ProfileService);
+  private readonly toasts = inject(ToastService);
 
   form = { firstName: '', lastName: '', university: '', location: '' };
   readonly saving = signal(false);
@@ -86,7 +88,7 @@ export class Profile {
     this.errorMessage.set('');
     this.successMessage.set('');
     this.profileService.removePicture().pipe(finalize(() => this.saving.set(false))).subscribe({
-      next: () => this.successMessage.set('Profile picture removed.'),
+      next: () => this.toasts.success('Profile picture removed successfully!'),
       error: (error: unknown) => this.errorMessage.set(toFriendlyError(error, 'Could not remove the picture.').message),
     });
   }
@@ -103,13 +105,18 @@ export class Profile {
     }
 
     this.saving.set(true);
+    const hadPicture = this.pendingFile() !== null;
     this.profileService.save(this.form, this.pendingFile()).pipe(
       finalize(() => this.saving.set(false)),
     ).subscribe({
       next: () => {
         this.edited = false;
         this.clearPreview();
-        this.successMessage.set('Profile saved.');
+      },
+      // save() emits once per request (details, then picture); only completion means everything succeeded.
+      complete: () => {
+        this.toasts.success('Profile updated successfully!');
+        if (hadPicture) this.toasts.success('Profile picture updated successfully!');
       },
       error: (error: unknown) => {
         const friendly = toFriendlyError(error, 'Could not save your profile. Please try again.');

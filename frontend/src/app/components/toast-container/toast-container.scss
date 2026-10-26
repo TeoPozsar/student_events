@@ -1,0 +1,74 @@
+@use '../../../styles/variables' as *;
+
+:host {
+  position: fixed;
+  inset: auto 0 24px 0;
+  z-index: 2000;
+  display: block;
+  height: 0;
+  pointer-events: none;
+}
+
+.toast-region {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  transform: translateX(-50%);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  padding: 12px 18px;
+  border: 1px solid #abefc6;
+  border-radius: 12px;
+  background: #ecfdf3;
+  box-shadow: 0 10px 30px #1b315226;
+  color: #067647;
+  font: 600 14px/1.35 $font;
+  animation: toast-in .25s ease-out;
+  transition: opacity .3s ease, transform .3s ease;
+
+  &.toast-error {
+    border-color: #f3c9c5;
+    background: $danger-light;
+    color: $danger;
+  }
+
+  &.leaving {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+.text {
+  overflow-wrap: anywhere;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+    transition: opacity .3s ease;
+  }
+}

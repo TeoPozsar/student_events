@@ -377,7 +377,8 @@ label {
   font-size: 12px;
 }
 
-input, textarea {
+input, textarea, select {
+  box-sizing: border-box;
   width: 100%;
   min-height: 40px;
   padding: 9px 12px;
@@ -407,8 +408,20 @@ textarea {
 
 .form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: 12px;
+
+  // Reserve a row for validation messages so they never shift neighbouring inputs
+  .field {
+    grid-template-rows: auto auto minmax(16px, auto);
+    align-content: start;
+  }
+
+  input, select {
+    height: 40px;
+    margin: 0;
+  }
 
   @media (max-width: $mobile) {
     grid-template-columns: 1fr;

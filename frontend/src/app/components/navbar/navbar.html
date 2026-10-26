@@ -3,9 +3,14 @@
   <p class="nav-heading">{{ authService.workspaceLabel() }}</p>
   <nav [attr.aria-label]="authService.workspaceLabel()">
     <a class="nav-link" routerLink="/events" routerLinkActive="active"><span aria-hidden="true">&#8962;</span>Discover Events</a>
-    <a class="nav-link" routerLink="/my-events" routerLinkActive="active"><span aria-hidden="true">&#9635;</span>My Events</a>
+    @if (authService.canViewMyEvents()) {
+      <a class="nav-link" routerLink="/my-events" routerLinkActive="active"><span aria-hidden="true">&#9635;</span>My Events</a>
+    }
     @if (authService.isManager()) {
       <a class="nav-link" routerLink="/manage" routerLinkActive="active"><span aria-hidden="true">&#65291;</span>Manage Events</a>
+    }
+    @if (authService.isAdmin()) {
+      <a class="nav-link" routerLink="/admin/users" routerLinkActive="active"><span aria-hidden="true">&#9787;</span>Manage Users</a>
     }
   </nav>
 </aside>

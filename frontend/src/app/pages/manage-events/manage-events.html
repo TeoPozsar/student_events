@@ -48,9 +48,10 @@
             }
           </div>
           <div class="card-body">
+            <app-status-badge [status]="event.status" />
             <span class="category-badge">{{ event.category }}</span>
             <h2 class="card-title">{{ event.title }}</h2>
-            <p class="card-meta"><span aria-hidden="true">◷</span> {{ formatDate(event.startDateTime) }}</p>
+            <p class="card-meta"><span aria-hidden="true">◷</span> {{ formatDate(event.startDateTime) }} &ndash; {{ formatDate(event.endDateTime) }}</p>
             <p class="card-meta"><span aria-hidden="true">⌖</span> {{ event.location }}</p>
             <p class="card-meta"><span aria-hidden="true">☺</span> {{ event.attendeeCount }} / {{ event.capacity }} attendees</p>
             <div class="card-actions">
@@ -65,7 +66,7 @@
 </section>
 
 <dialog #formDialog class="modal" aria-labelledby="form-heading" (cancel)="$event.preventDefault(); closeForm()">
-  <form (ngSubmit)="saveEvent()" #event="ngForm" novalidate>
+  <form (ngSubmit)="saveEvent(event)" #event="ngForm" novalidate>
     <h2 id="form-heading">{{ editingId === null ? 'Create Event' : 'Edit Event' }}</h2>
 
     <fieldset [disabled]="saving()">
@@ -78,7 +79,10 @@
         </div>
         <div class="field">
           <label for="event-category">Category <span class="required" aria-hidden="true">*</span></label>
-          <input id="event-category" name="category" type="text" [(ngModel)]="eventForm.category" #category="ngModel" placeholder="Technology" required aria-required="true">
+          <select id="event-category" name="category" [(ngModel)]="eventForm.category" #category="ngModel" required aria-required="true">
+            <option value="" disabled>Select a category</option>
+            @for (c of categories; track c) { <option [value]="c">{{ c }}</option> }
+          </select>
           @if (category.invalid && (category.touched || event.submitted)) { <small class="field-error" role="alert">Category is required.</small> }
         </div>
       </div>
@@ -97,6 +101,14 @@
           <input id="event-start" name="startDateTime" type="datetime-local" [(ngModel)]="eventForm.startDateTime" #start="ngModel" required aria-required="true">
           @if (start.invalid && (start.touched || event.submitted)) { <small class="field-error" role="alert">Start date and time is required.</small> }
         </div>
+        <div class="field">
+          <label for="event-end">End date and time <span class="required" aria-hidden="true">*</span></label>
+          <input id="event-end" name="endDateTime" type="datetime-local" [(ngModel)]="eventForm.endDateTime" #end="ngModel" required aria-required="true">
+          @if (end.invalid && (end.touched || event.submitted)) { <small class="field-error" role="alert">End date and time is required.</small> }
+          @else if (endBeforeStart()) { <small class="field-error" role="alert">End must be after the start.</small> }
+        </div>
+      </div>
+      <div class="form-row">
         <div class="field">
           <label for="event-capacity">Capacity <span class="required" aria-hidden="true">*</span></label>
           <input id="event-capacity" name="capacity" type="number" inputmode="numeric" step="1" min="1" [(ngModel)]="eventForm.capacity" #capacity="ngModel" placeholder="50" required aria-required="true">
@@ -128,7 +140,7 @@
 
     <div class="modal-actions">
       <button class="secondary-button" type="button" [disabled]="saving()" (click)="closeForm()">Cancel</button>
-      <button class="primary-button" type="submit" [disabled]="saving() || event.invalid" [class.loading]="saving()">
+      <button class="primary-button" type="submit" [disabled]="saving()" [class.loading]="saving()">
         @if (saving()) { <span class="spinner" aria-hidden="true"></span>Saving… } @else { {{ editingId === null ? 'Create event' : 'Save changes' }} }
       </button>
     </div>

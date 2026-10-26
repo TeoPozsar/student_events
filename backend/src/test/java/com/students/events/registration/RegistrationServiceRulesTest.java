@@ -61,6 +61,22 @@ class RegistrationServiceRulesTest {
     }
 
     @Test
+    void userCanRegister() {
+        user(8, "ok@x.ro", UserRole.USER);
+        assertEquals(RegistrationStatus.REGISTERED, service.register(5L, "ok@x.ro").getStatus());
+        assertEquals(1, event.getAttendeeCount());
+    }
+
+    @Test
+    void adminCannotCancelRegistration() {
+        user(9, "adm2@x.ro", UserRole.ADMIN);
+        assertEquals(HttpStatus.FORBIDDEN.value(),
+                assertThrows(ResponseStatusException.class, () -> service.cancel(5L, "adm2@x.ro"))
+                        .getStatusCode().value());
+        verify(registrations, never()).save(any());
+    }
+
+    @Test
     void duplicateRegistrationIsRejected() {
         User u = user(3, "u@x.ro", UserRole.USER);
         EventRegistration existing = new EventRegistration();

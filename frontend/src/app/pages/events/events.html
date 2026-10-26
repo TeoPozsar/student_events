@@ -16,6 +16,8 @@
       @if (!loading() && !errorMessage()) {
         @if (registeredOnly && events().length === 0) {
           <div class="empty-state"><h3>You haven't registered for any events yet.</h3><a class="discover-link" routerLink="/events">Discover Events</a></div>
+        } @else if (ownOnly && events().length === 0) {
+          <div class="empty-state"><h3>You haven't created any events yet.</h3><a class="discover-link" routerLink="/manage">Manage Events</a></div>
         } @else { <div class="empty-state"><h3>No events found</h3><p>Try a different search or category.</p></div> }
       }
     }

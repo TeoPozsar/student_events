@@ -93,6 +93,14 @@ public class SecurityConfig {
                     "/api/events/*/poster"
                 ).permitAll()
                 .requestMatchers(
+                    org.springframework.http.HttpMethod.GET,
+                    "/api/events/mine"
+                ).hasRole("ORGANIZER")
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.GET,
+                    "/api/events/admin"
+                ).hasRole("ADMIN")
+                .requestMatchers(
                     org.springframework.http.HttpMethod.POST,
                     "/api/events"
                 ).hasAnyRole("ORGANIZER", "ADMIN")
@@ -100,6 +108,13 @@ public class SecurityConfig {
                     org.springframework.http.HttpMethod.POST,
                     "/api/events/*/register"
                 ).hasRole("USER")
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.DELETE,
+                    "/api/events/*/register"
+                ).hasAnyRole("USER", "ORGANIZER")
+                .requestMatchers("/api/registrations/**")
+                    .hasAnyRole("USER", "ORGANIZER")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers(
                     org.springframework.http.HttpMethod.PUT,
                     "/api/events/*"

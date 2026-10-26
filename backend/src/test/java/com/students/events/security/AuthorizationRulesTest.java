@@ -40,8 +40,8 @@ class AuthorizationRulesTest {
     @MockitoBean ProfileService profileService;
 
     private static final String EVENT_JSON = """
-            {"title":"T","description":"D","location":"L","category":"C",
-             "startDateTime":"2999-01-01T10:00:00","capacity":5}""";
+            {"title":"T","description":"D","location":"L","category":"Technology",
+             "startDateTime":"2999-01-01T10:00:00","endDateTime":"2999-01-01T12:00:00","capacity":5}""";
 
     @Test
     void anonymousIsRejectedOnProtectedEndpoints() throws Exception {
@@ -59,6 +59,60 @@ class AuthorizationRulesTest {
         poster.setData(new byte[]{1});
         org.mockito.Mockito.when(eventService.getPoster(1L)).thenReturn(poster);
         mvc.perform(get("/api/events/1/poster")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void userCannotUseOrganizerOrAdminLists() throws Exception {
+        mvc.perform(get("/api/events/mine")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/events/admin")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/events")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "ORGANIZER")
+    void organizerCanUseMineButNotAdminList() throws Exception {
+        mvc.perform(get("/api/events/mine")).andExpect(status().isOk());
+        mvc.perform(get("/api/events/admin")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/events")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void adminCanUseAdminListButNotMine() throws Exception {
+        mvc.perform(get("/api/events/admin")).andExpect(status().isOk());
+        mvc.perform(get("/api/events/mine")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ORGANIZER")
+    void endNotAfterStartIsRejected() throws Exception {
+        String json = """
+                {"title":"T","description":"D","location":"L","category":"Technology",
+                 "startDateTime":"2999-01-01T10:00:00","endDateTime":"2999-01-01T10:00:00","capacity":5}""";
+        mvc.perform(post("/api/events").contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "ORGANIZER")
+    void invalidCategoryIsRejected() throws Exception {
+        mvc.perform(post("/api/events").contentType(MediaType.APPLICATION_JSON)
+                        .content(EVENT_JSON.replace("Technology", "technology")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/events").contentType(MediaType.APPLICATION_JSON)
+                        .content(EVENT_JSON.replace("Technology", "Sports")))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "ORGANIZER")
+    void everySupportedCategoryIsAccepted() throws Exception {
+        for (String c : new String[]{"Technology", "Social", "Workshops", "Volunteering"}) {
+            mvc.perform(post("/api/events").contentType(MediaType.APPLICATION_JSON)
+                            .content(EVENT_JSON.replace("Technology", c)))
+                    .andExpect(status().is2xxSuccessful());
+        }
     }
 
     @Test

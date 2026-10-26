@@ -68,6 +68,27 @@ describe('route guards', () => {
     expect(await allowed).toBe(true);
   });
 
+  it('blocks ADMIN from My Events but allows USER and ORGANIZER', async () => {
+    seedSession('ADMIN');
+    const denied = firstValueFrom(run(roleGuard, { roles: ['USER', 'ORGANIZER'] }));
+    http.expectOne('http://localhost:8081/api/users/me').flush(ME('ADMIN'));
+    expect(router.serializeUrl((await denied) as UrlTree)).toBe('/events');
+  });
+
+  it('allows only ADMIN on the Manage Users route', async () => {
+    seedSession('ORGANIZER');
+    const denied = firstValueFrom(run(roleGuard, { roles: ['ADMIN'] }));
+    http.expectOne('http://localhost:8081/api/users/me').flush(ME('ORGANIZER'));
+    expect(router.serializeUrl((await denied) as UrlTree)).toBe('/events');
+  });
+
+  it('allows ADMIN on the Manage Users route', async () => {
+    seedSession('ADMIN');
+    const allowed = firstValueFrom(run(roleGuard, { roles: ['ADMIN'] }));
+    http.expectOne('http://localhost:8081/api/users/me').flush(ME('ADMIN'));
+    expect(await allowed).toBe(true);
+  });
+
   it('keeps login public for anonymous users and redirects signed-in ones', async () => {
     expect(await firstValueFrom(run(guestGuard))).toBe(true);
   });

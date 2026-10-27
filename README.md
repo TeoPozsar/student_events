@@ -1,6 +1,6 @@
 # Student Events
 
-A web application for discovering and managing student events organized by Liga AC.
+A web application for discovering and managing student events .
 
 Student Events allows students to explore events and manage their registrations, organizers to manage their own events, and administrators to manage users and oversee events.
 
@@ -123,10 +123,6 @@ Database data is stored in a Docker volume and is normally preserved when the co
 
 Open a new PowerShell terminal and navigate to the backend directory:
 
-```powershell
-cd backend
-```
-
 The backend requires the `JWT_SECRET` environment variable.
 
 For local development, set it in the current PowerShell session:
@@ -136,14 +132,6 @@ $env:JWT_SECRET = "REPLACE_WITH_A_SECURE_DEVELOPMENT_SECRET"
 ```
 
 Replace the placeholder with a suitable development secret that satisfies the application's JWT signing requirements.
-
-Do not commit production secrets, private keys, or real credentials to Git.
-
-Check that Java is installed:
-
-```powershell
-java -version
-```
 
 Start the Spring Boot application:
 
@@ -170,10 +158,6 @@ Keep this terminal open while using the application.
 ## 4. Configure and Start the Frontend
 
 Open another PowerShell terminal and navigate to the frontend directory:
-
-```powershell
-cd frontend
-```
 
 Install dependencies:
 
@@ -215,7 +199,6 @@ Migrations are applied automatically when the backend starts, according to the c
 
 For a fresh installation, start with an empty database and verify that all migrations execute successfully.
 
-Do not manually create tables that are already managed by Flyway.
 
 ## 6. User Roles
 
@@ -242,74 +225,3 @@ Event statuses are calculated using the event's start and end date-time.
 | `FINISHED` | The event has reached or passed its end time. |
 
 Finished events are excluded from event discovery, while organizers and administrators can access completed events through their management views.
-
-## 8. Running Tests
-
-### Backend
-
-From the `backend` directory:
-
-```powershell
-.\mvnw.cmd test
-```
-
-### Frontend production build
-
-From the `frontend` directory:
-
-```powershell
-npm run build
-```
-
-Run these commands before submitting changes. A successful build does not replace manual testing of the application's workflows.
-
-## 9. Troubleshooting
-
-### Backend fails because `JWT_SECRET` is missing
-
-Set the variable in the same PowerShell terminal used to start Spring Boot:
-
-```powershell
-$env:JWT_SECRET = "REPLACE_WITH_A_SECURE_DEVELOPMENT_SECRET"
-```
-
-Restart the backend after setting it.
-
-### Database connection fails
-
-Check that Docker Desktop is running and the database container is healthy:
-
-```powershell
-docker ps
-```
-
-Verify the configured database name, username, password, and host port.
-
-### Database schema validation fails
-
-Inspect the backend logs and verify that Flyway successfully applied every migration. Check for missing tables or incompatible schema changes.
-
-### Frontend cannot communicate with the backend
-
-Verify that:
-- The backend is running on port `8081`.
-- The frontend is running on port `4200`.
-- The API base URL is configured correctly.
-- The authenticated request includes a valid JWT when required.
-- The backend's CORS configuration allows the frontend origin.
-
-### Port is already in use
-
-Stop the application currently using the port or update the local configuration consistently.
-
-## 10. Security Notes
-
-- Never commit real passwords, JWT signing secrets, access tokens, or private keys.
-- Use environment variables for secrets.
-- Use development-only credentials locally.
-- Do not expose administrative test accounts in a public deployment.
-- Review production database credentials and security configuration before deployment.
-
-## License
-
-This project was developed as part of a bachelor's thesis. Add the applicable license or academic attribution information if required by the institution.
